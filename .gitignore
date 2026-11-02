@@ -1,0 +1,8 @@
+migrations
+venv
+.env
+.mypy_cache
+__pycache__/
+*.pyc
+structural.txt
+.pytest_cache
