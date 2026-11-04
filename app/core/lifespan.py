@@ -1,8 +1,7 @@
-import aiohttp
-
 from contextlib import asynccontextmanager
 
-from app.main import app
+import aiohttp
+from core.scheduler import start_scheduler, stop_scheduler
 from fastapi import FastAPI
 
 
@@ -12,4 +11,9 @@ async def lifespan(app: FastAPI):
         base_url='http://events-provider.dev-2.python-labs.ru',
     ) as session:
         app.state.http_session = session
+
+        start_scheduler()
+
         yield
+
+        stop_scheduler()
