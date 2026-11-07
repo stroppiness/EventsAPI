@@ -6,13 +6,16 @@ from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class EventRegister(BaseModel):
-    event_id: UUID
     first_name: str
     last_name: str
     seat: str
     email: EmailStr
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class TicketRegisterRequest(EventRegister):
+    event_id: UUID
 
 
 class EventCreated(BaseModel):

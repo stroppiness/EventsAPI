@@ -15,9 +15,9 @@ from provider_requesting.exceptions import (
 from provider_requesting.schemas import (
     EventCreated,
     EventDetailResponse,
-    EventRegister,
     EventsApiResponse,
     SeatsResponse,
+    TicketRegisterRequest,
     UnregisterResponse,
 )
 from repository.repository import PlaceEventsRepositoryApi, TicketRepository
@@ -163,7 +163,7 @@ async def get_available_seats(
     response_model=EventCreated,
 )
 async def register_ticket(
-    data: EventRegister,
+    data: TicketRegisterRequest,
     db: SessionDep,
     request: Request,
 ):
