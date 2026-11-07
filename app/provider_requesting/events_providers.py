@@ -93,7 +93,6 @@ class EventsProviderHTTPClient:
     async def get_all_events(self, changed_at: datetime) -> list[EventResponse]:
         events = []
         next_url = None
-
         while True:
             page = await self.get_events(
                 changed_at=changed_at,
