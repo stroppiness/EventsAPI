@@ -184,7 +184,7 @@ async def register_ticket(
     )
 
     try:
-        return await service.register(event_id, data)
+        return await service.register(data.event_id, data)
 
     except EventNotFoundError as err:
         raise HTTPException(404, detail="Event not found") from err
