@@ -35,7 +35,7 @@ class Event(Base):
         primary_key=True,
     )
     name: Mapped[str] = mapped_column()
-    place: Mapped[UUID] = mapped_column(
+    place_id: Mapped[UUID] = mapped_column(
         SQLUUID(as_uuid=True),
         ForeignKey('places.id'),
 
