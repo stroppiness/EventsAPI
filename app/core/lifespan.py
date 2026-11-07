@@ -9,13 +9,17 @@ from core.scheduler import start_scheduler, stop_scheduler
 
 load_dotenv()
 
-PROVIDER_URL = os.getenv('PROVIDER_URL')
+PROVIDER_URL = os.getenv(
+    'PROVIDER_URL',
+    'http://student-system-events-provider-web.'
+    'student-system-events-provider.svc:8000',
+)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     async with aiohttp.ClientSession(
-        base_url='http://events-provider.dev-2.python-labs.ru',
+        base_url=PROVIDER_URL,
     ) as session:
         app.state.http_session = session
 
