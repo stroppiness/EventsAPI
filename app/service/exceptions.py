@@ -1,0 +1,2 @@
+class TicketNotFoundError(Exception):
+    pass

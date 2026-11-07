@@ -1,13 +1,14 @@
 import asyncio
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from dotenv import load_dotenv
+
 from db.database import SessionLocal
 from db.models import SyncMetadata
-from dotenv import load_dotenv
 from provider_requesting.events_providers import EventsProviderHTTPClient
 from repository.repository import SyncEventsRepository
 from service.events import EventSyncClientService
@@ -28,7 +29,7 @@ async def run_sync(app):
         return
 
     async with sync_lock:
-        sync_started_at = datetime.now(timezone.utc)
+        sync_started_at = datetime.now(UTC)
 
         try:
             async with SessionLocal() as session:
@@ -49,7 +50,7 @@ async def run_sync(app):
 
                     metadata = SyncMetadata(
                         sync_status="success",
-                        last_sync_time=datetime.now(timezone.utc),
+                        last_sync_time=datetime.now(UTC),
                         last_changed_at=sync_started_at,
                     )
                     await repository.save_metadata(metadata)

@@ -15,3 +15,26 @@ eventsapi = "eventsapi:main"
 [build-system]
 requires = ["uv_build>=0.13.6,<0.14.0"]
 build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B"]
+
+exclude = [
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".git",
+    "migrations",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app", "db", "repository", "service", "provider_requesting"]

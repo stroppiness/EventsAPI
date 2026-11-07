@@ -1,14 +1,31 @@
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import UTC, date, datetime, time, timedelta, timezone
 from typing import Protocol
 from uuid import UUID
 
-from db.models import Event, Place, SyncMetadata
-from provider_requesting.events_providers import EventsProviderClient
-from provider_requesting.schemas import EventDetailResponse
-from repository.repository import (EventRepository, PlaceEventsRepositoryApi,
-                                   PlaceRepository, SyncRepository)
+from db.models import Event, Place, Ticket
+from provider_requesting.events_providers import EventsProviderClient, SeatsService
+from provider_requesting.exceptions import (
+    EventNotFoundError,
+    EventNotPublishedError,
+    RegistrationDeadlinePassedError,
+    SeatNotAvailableError,
+)
+from provider_requesting.schemas import (
+    EventCreated,
+    EventDetailResponse,
+    EventRegister,
+    UnregisterResponse,
+)
+from repository.repository import (
+    PlaceEventsRepository,
+    PlaceEventsRepositoryApi,
+    SyncRepository,
+    TicketRepository,
+)
+from service.exceptions import TicketNotFoundError
 
 UTC_PLUS_3 = timezone(timedelta(hours=3))
+
 
 class EventSyncClient(Protocol):
 
@@ -39,7 +56,7 @@ class EventSyncClientService:
         metadata = await self.sync_repository.get_metadata()
 
         if metadata is None:
-            changed_at = datetime(2000, 1, 1, tzinfo=timezone.utc)
+            changed_at = datetime(2000, 1, 1, tzinfo=UTC)
         else:
             changed_at = metadata.last_changed_at
 
@@ -113,3 +130,81 @@ class PlaceEventsService:
         }
 
         return EventDetailResponse(**event_data)
+
+
+class TicketService:
+
+    def __init__(
+        self,
+        ticket_repository: TicketRepository,
+        event_repository: PlaceEventsRepository,
+        provider_client: EventsProviderClient,
+        seats_service: SeatsService,
+    ):
+        self.ticket_repository = ticket_repository
+        self.event_repository = event_repository
+        self.provider_client = provider_client
+        self.seats_service = seats_service
+
+    async def register(self, data: EventRegister) -> EventCreated:
+        event = await self.event_repository.get_event_by_id(data.event_id)
+
+        if event is None:
+            raise EventNotFoundError("Мероприятие не найдено")
+        if event.status != "published":
+            raise EventNotPublishedError(
+                "Регистрация на мероприятие недоступна"
+            )
+
+        if datetime.now(UTC) >= event.registration_deadline:
+            raise RegistrationDeadlinePassedError(
+                "Срок регистрации истёк"
+            )
+
+        seats_response = await self.seats_service.get_available_seats(
+            data.event_id
+        )
+
+        if data.seat not in seats_response.available_seats:
+            raise SeatNotAvailableError("Выбранное место недоступно")
+
+        provider_data = EventRegister(
+            first_name=data.first_name,
+            last_name=data.last_name,
+            email=data.email,
+            seat=data.seat,
+        )
+
+        provider_response = await self.provider_client.register(
+            data.event_id,
+            provider_data,
+        )
+
+        ticket = Ticket(
+            ticket_id=provider_response.ticket_id,
+            event_id=data.event_id,
+            first_name=data.first_name,
+            last_name=data.last_name,
+            email=data.email,
+            seat=data.seat,
+        )
+
+        await self.ticket_repository.create_ticket(ticket)
+
+        return provider_response
+
+    async def unregister(self, ticket_id: UUID) -> UnregisterResponse:
+        ticket = await self.ticket_repository.get_ticket_by_id(ticket_id)
+
+        if ticket is None:
+            raise TicketNotFoundError("Билет не найден")
+
+        provider_response = await self.provider_client.unregister(
+            event_id=ticket.event_id,
+            ticket_id=ticket.ticket_id,
+        )
+
+        if provider_response.success:
+            await self.ticket_repository.delete_ticket(ticket)
+
+        return provider_response

@@ -1,6 +1,7 @@
-from app.api.fromfastapi import FastAPI
-from app.core.lifespan import lifespan
+from api.events import router as event_router
+from core.lifespan import lifespan
+from fastapi import FastAPI
 
 app = FastAPI(lifespan=lifespan)
 
-app.include_router(api_router)
+app.include_router(event_router, prefix='/api', tags=['Event'])

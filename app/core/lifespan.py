@@ -1,8 +1,9 @@
 from contextlib import asynccontextmanager
 
 import aiohttp
-from core.scheduler import start_scheduler, stop_scheduler
 from fastapi import FastAPI
+
+from core.scheduler import start_scheduler, stop_scheduler
 
 
 @asynccontextmanager
@@ -12,7 +13,7 @@ async def lifespan(app: FastAPI):
     ) as session:
         app.state.http_session = session
 
-        start_scheduler()
+        start_scheduler(app)
 
         yield
 

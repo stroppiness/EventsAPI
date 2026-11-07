@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install ruff pytest pytest-asyncio
+
+      - name: Ruff check
+        run: ruff check .
+
+      - name: Pytest
+        run: pytest app/tests
+        env:
+          PYTHONPATH: app
+
+  deploy:
+    needs: CI
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send deploy request
+        run: |
+          HTTP_CODE=$(curl -s -o response.txt -w "%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-API-Key: ${{ secrets.LMS_API_KEY }}" \
+            -d '{"image":"ghcr.io/${{ needs.build.outputs.repo }}:${{ github.sha }}","repository":"${{ github.repository }}"}' \
+            https://lms.python-labs.ru/api/deploy-requests)
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Deployment failed with status code $HTTP_CODE"
+            echo "Response body:"
+            cat response.txt
+            exit 1
+          fi

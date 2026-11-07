@@ -3,14 +3,21 @@ import os
 import time
 import typing
 from datetime import datetime
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import aiohttp
 from dotenv import load_dotenv
-from provider_requesting.schemas import (EventCreated, EventRegister,
-                                         EventResponse, EventsResponse,
-                                         PlaceEventsRepositoryApi,
-                                         ProviderSeatsResponse, SeatsResponse)
+
+from provider_requesting.schemas import (
+    EventCreated,
+    EventRegister,
+    EventResponse,
+    EventsResponse,
+    ProviderSeatsResponse,
+    SeatsResponse,
+    UnregisterResponse,
+)
+from repository.repository import PlaceEventsRepositoryApi
 
 load_dotenv()
 
@@ -38,6 +45,12 @@ class EventsProviderClient(typing.Protocol):
         self,
         changed_at: datetime,
     ) -> list[EventResponse]: ...
+
+    async def unregister(
+        self,
+        event_id: UUID,
+        ticket_id: UUID,
+    ) -> UnregisterResponse: ...
 
 
 class EventsProviderHTTPClient:
@@ -100,17 +113,21 @@ class EventsProviderHTTPClient:
         self,
         event_id: UUID,
     ) -> ProviderSeatsResponse:
-
         url = f"/api/events/{event_id}/seats/"
-
-        async with self.session.get(
-            f"{self.base_url}{url}",
-            headers={"x-api-key": self.api_key},
-        ) as response:
-            response.raise_for_status()
-            data = await response.json()
-
-        return ProviderSeatsResponse(**data)
+        try:
+            async with self.session.get(
+                url,
+                headers={"x-api-key": self.api_key},
+            ) as response:
+                response.raise_for_status()
+                data = await response.json()
+                return ProviderSeatsResponse.model_validate(data)
+        except aiohttp.ClientResponseError:
+            logger.exception("Ошибка HTTP при получении мест у Events Provider")
+            raise
+        except aiohttp.ClientError:
+            logger.exception("Ошибка соединения с Events Provider")
+            raise
 
     async def register(
         self,
@@ -118,11 +135,52 @@ class EventsProviderHTTPClient:
         data: EventRegister,
     ) -> EventCreated:
 
-        async with self.session.post(
-            f'/api/events/{event_id}/register/',
-            headers={'x-api-key': self.api_key},
-            json=data.model_dump(mode='json'),
-        ) as response: ...
+        url = f"/api/events/{event_id}/register/"
+
+        try:
+            async with self.session.post(
+                url,
+                headers={"x-api-key": self.api_key},
+                json=data.model_dump(mode="json"),
+            ) as response:
+                response.raise_for_status()
+                response_data = await response.json()
+
+                return EventCreated.model_validate(response_data)
+
+        except aiohttp.ClientResponseError:
+            logger.exception("Ошибка HTTP при регистрации на мероприятие")
+            raise
+
+        except aiohttp.ClientError:
+            logger.exception("Ошибка соединения с Events Provider")
+            raise
+
+    async def unregister(
+        self,
+        event_id: UUID,
+        ticket_id: UUID,
+    ) -> UnregisterResponse:
+        url = f"/api/events/{event_id}/unregister/"
+
+        try:
+            async with self.session.delete(
+                url,
+                headers={"x-api-key": self.api_key},
+                json={"ticket_id": str(ticket_id)},
+            ) as response:
+                response.raise_for_status()
+                response_data = await response.json()
+
+                return UnregisterResponse.model_validate(response_data)
+
+        except aiohttp.ClientResponseError:
+            logger.exception("Ошибка HTTP при отмене регистрации у Provider")
+            raise
+
+        except aiohttp.ClientError:
+            logger.exception("Ошибка соединения с Events Provider")
+            raise
 
 
 class SeatsService:
@@ -132,10 +190,11 @@ class SeatsService:
         self,
         repository: PlaceEventsRepositoryApi,
         provider_client: EventsProviderHTTPClient,
+        cache: dict,
     ):
         self.repository = repository
         self.provider_client = provider_client
-        self.cache = {}
+        self.cache = cache
 
     async def get_available_seats(
         self,
@@ -173,25 +232,3 @@ class SeatsService:
             event_id=event_id,
             available_seats=seats,
         )
-
-
-
-class CreateTicketUsecase:
-    def __init__(
-        self,
-        client: EventsProviderClient,
-        events: EventRepository,
-        tickets: TicketRepository,
-    ):
-
-        async def do(self, event_id: str, first_name: str, seat: str):
-            event = await self.events.get(event_id)
-            if not event:
-                raise EventNotFound
-
-            if not event.status == EventStatus.published:
-                raise EventUnexpectedStatus
-
-            ticket_id = await self.client.register(event.id, first_name, seat)
-
-            await self.tickets.create(event.id, ticket_id, first_name)

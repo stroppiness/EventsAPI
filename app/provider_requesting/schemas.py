@@ -93,3 +93,7 @@ class ProviderSeatsResponse(BaseModel):
 class SeatsResponse(BaseModel):
     event_id: UUID
     available_seats: list[str]
+
+
+class UnregisterResponse(BaseModel):
+    success: bool

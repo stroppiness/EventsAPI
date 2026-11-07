@@ -1,14 +1,27 @@
 from datetime import date
 from uuid import UUID
 
-from db.database import SessionDep
+from core.scheduler import run_sync
 from fastapi import APIRouter, HTTPException, Query, Request, status
-from provider_requesting.schemas import (EventDetailResponse,
-                                         EventsApiResponse, SeatsResponse)
-from repository.repository import PlaceEventsRepositoryApi
-from scheduler import run_sync
-from service.events import (EventSyncClientService, PlaceEventsService,
-                            SeatsService)
+
+from db.database import SessionDep
+from provider_requesting.exceptions import (
+    EventNotFoundError,
+    EventNotPublishedError,
+    RegistrationDeadlinePassedError,
+    SeatNotAvailableError,
+)
+from provider_requesting.schemas import (
+    EventCreated,
+    EventDetailResponse,
+    EventRegister,
+    EventsApiResponse,
+    SeatsResponse,
+    UnregisterResponse,
+)
+from repository.repository import PlaceEventsRepositoryApi, TicketRepository
+from service.events import PlaceEventsService, SeatsService, TicketService
+from service.exceptions import TicketNotFoundError
 
 router = APIRouter()
 
@@ -28,7 +41,7 @@ async def trigger_sync(request: Request):
 
 
 @router.get(
-    '/api/events',
+    '/events',
     status_code=status.HTTP_200_OK,
     response_model=EventsApiResponse,
 )
@@ -70,7 +83,7 @@ async def get_events(
 
 
 @router.get(
-    "/api/events/{event_id}",
+    "/events/{event_id}",
     status_code=status.HTTP_200_OK,
     response_model=EventDetailResponse,
 )
@@ -86,14 +99,14 @@ async def get_event(
     if event is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Event not found",
+            detail="Событие не найдено",
         )
 
     return event
 
 
 @router.get(
-    "/api/events/{event_id}/seats",
+    "/events/{event_id}/seats",
     status_code=status.HTTP_200_OK,
     response_model=SeatsResponse,
 )
@@ -114,11 +127,11 @@ async def get_available_seats(
     try:
         result = await service.get_available_seats(event_id)
 
-    except ValueError:
+    except ValueError as err:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Event is not published",
-        )
+        ) from err
 
     if result is None:
         raise HTTPException(
@@ -127,3 +140,88 @@ async def get_available_seats(
         )
 
     return result
+
+
+@router.post(
+    "/tickets",
+    status_code=status.HTTP_201_CREATED,
+    response_model=EventCreated,
+)
+async def register_ticket(
+    event_id: UUID,
+    data: EventRegister,
+    db: SessionDep,
+    request: Request,
+):
+    repository = PlaceEventsRepositoryApi(db)
+
+    provider_client = request.app.state.provider_client
+
+    seats_service = SeatsService(
+        repository=repository,
+        provider_client=provider_client,
+        cache=request.app.state.seats_cache,
+    )
+
+    service = TicketService(
+        event_repository=repository,
+        provider_client=provider_client,
+        seats_service=seats_service,
+    )
+
+    try:
+        return await service.register(event_id, data)
+
+    except EventNotFoundError as err:
+        raise HTTPException(404, detail="Event not found") from err
+
+    except EventNotPublishedError as err:
+        raise HTTPException(
+            400,
+            detail="Event is not published") from err
+
+    except RegistrationDeadlinePassedError as err:
+        raise HTTPException(
+            400,
+            detail="Registration deadline has passed") from err
+
+    except SeatNotAvailableError as err:
+        raise HTTPException(400, detail="Seat is not available") from err
+
+
+@router.delete(
+    "/tickets/{ticket_id}",
+    response_model=UnregisterResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def unregister_ticket(
+    ticket_id: UUID,
+    db: SessionDep,
+    request: Request,
+):
+    ticket_repository = TicketRepository(db)
+    repository = PlaceEventsRepositoryApi(db)
+
+    provider_client = request.app.state.provider_client
+
+    seats_service = SeatsService(
+        repository=repository,
+        provider_client=provider_client,
+        cache=request.app.state.seats_cache,
+    )
+
+    service = TicketService(
+        ticket_repository=ticket_repository,
+        event_repository=repository,
+        provider_client=provider_client,
+        seats_service=seats_service,
+    )
+
+    try:
+        return await service.unregister(ticket_id)
+
+    except TicketNotFoundError as err:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket not found",
+        ) from err
