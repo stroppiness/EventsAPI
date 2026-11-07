@@ -1,27 +1,18 @@
-import os
 from typing import Annotated
 
-from dotenv import load_dotenv
+from core.config import settings
 from fastapi import Depends
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
-load_dotenv()
-
-DB_USER = os.getenv('POSTGRES_USERNAME') or os.getenv('POSTGRES_USER')
-DB_PASSWORD = os.getenv('POSTGRES_PASSWORD')
-DB_HOST = os.getenv('POSTGRES_HOST') or os.getenv('DB_HOST')
-DB_PORT = int(os.getenv('POSTGRES_PORT') or 5432)
-DB_NAME = os.getenv('POSTGRES_DATABASE_NAME') or os.getenv('POSTGRES_DB')
-
 DATABASE_URL = URL.create(
     'postgresql+asyncpg',
-    username=DB_USER,
-    password=DB_PASSWORD,
-    host=DB_HOST,
-    port=DB_PORT,
-    database=DB_NAME,
+    username=settings.db_user,
+    password=settings.db_password,
+    host=settings.db_host,
+    port=settings.db_port,
+    database=settings.db_name,
 )
 
 engine = create_async_engine(DATABASE_URL)

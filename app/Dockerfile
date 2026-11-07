@@ -11,4 +11,3 @@ ENV PYTHONPATH=/code/app
 WORKDIR /code/app
 
 CMD ["sh", "-c", "alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"]
-#CMD ["sh", "-c", "python reset_db.py && alembic upgrade head && uvicorn main:app --host 0.0.0.0 --port 8000"]

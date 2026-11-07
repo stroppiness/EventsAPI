@@ -1,12 +1,12 @@
 import logging
-import os
 import time
 import typing
+from collections import deque
 from datetime import datetime
 from uuid import UUID
 
 import aiohttp
-from dotenv import load_dotenv
+from core.config import settings
 
 from provider_requesting.schemas import (
     EventCreated,
@@ -19,11 +19,9 @@ from provider_requesting.schemas import (
 )
 from repository.repository import PlaceEventsRepositoryApi
 
-load_dotenv()
-
 logger = logging.getLogger(__name__)
 
-API_KEY = os.getenv('API_KEY')
+API_KEY = settings.api_key
 
 
 class EventsProviderClient(typing.Protocol):
@@ -51,6 +49,44 @@ class EventsProviderClient(typing.Protocol):
         event_id: UUID,
         ticket_id: UUID,
     ) -> UnregisterResponse: ...
+
+
+class EventsPaginator:
+    """Асинхронный итератор для постраничного получения событий."""
+
+    def __init__(
+        self,
+        client: EventsProviderClient,
+        changed_at: datetime,
+    ) -> None:
+        self.client = client
+        self.changed_at = changed_at
+        self._buffer: deque[EventResponse] = deque()
+        self._next_url: str | None = None
+        self._is_first_page: bool = True
+        self._exhausted: bool = False
+
+    def __aiter__(self) -> 'EventsPaginator':
+        return self
+
+    async def __anext__(self) -> EventResponse:
+        while not self._buffer:
+            if self._exhausted:
+                raise StopAsyncIteration
+
+            page = await self.client.get_events(
+                changed_at=self.changed_at,
+                next_url=None if self._is_first_page else self._next_url,
+            )
+            self._is_first_page = False
+
+            self._buffer.extend(page.results)
+            self._next_url = page.next
+
+            if self._next_url is None:
+                self._exhausted = True
+
+        return self._buffer.popleft()
 
 
 class EventsProviderHTTPClient:

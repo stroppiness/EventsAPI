@@ -3,7 +3,11 @@ from typing import Protocol
 from uuid import UUID
 
 from db.models import Event, Place, Ticket
-from provider_requesting.events_providers import EventsProviderClient, SeatsService
+from provider_requesting.events_providers import (
+    EventsPaginator,
+    EventsProviderClient,
+    SeatsService,
+)
 from provider_requesting.exceptions import (
     EventNotFoundError,
     EventNotPublishedError,
@@ -60,9 +64,11 @@ class EventSyncClientService:
         else:
             changed_at = metadata.last_changed_at
 
-        events = await self.provider_client.get_all_events(changed_at)
-
-        for event in events:
+        paginator = EventsPaginator(
+            client=self.provider_client,
+            changed_at=changed_at,
+        )
+        async for event in paginator:
             place = event.place
             place_data = place.model_dump()
             db_place = Place(**place_data)

@@ -1,26 +1,21 @@
 import asyncio
 import logging
-import os
 from datetime import UTC, datetime
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-from dotenv import load_dotenv
 
+from core.config import settings
 from db.database import SessionLocal
 from db.models import SyncMetadata
 from provider_requesting.events_providers import EventsProviderHTTPClient
 from repository.repository import SyncEventsRepository
 from service.events import EventSyncClientService
 
-load_dotenv()
-
 logger = logging.getLogger(__name__)
 
 scheduler = AsyncIOScheduler()
 sync_lock = asyncio.Lock()
-
-API_KEY = os.getenv('API_KEY')
 
 
 async def run_sync(app):
@@ -37,7 +32,7 @@ async def run_sync(app):
 
                 provider_client = EventsProviderHTTPClient(
                     session=app.state.http_session,
-                    api_key=API_KEY,
+                    api_key=settings.api_key,
                 )
 
                 sync_service = EventSyncClientService(
