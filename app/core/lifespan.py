@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from core.scheduler import start_scheduler, stop_scheduler
+from db.database import API_KEY
+from provider_requesting.events_providers import EventsProviderHTTPClient
 
 load_dotenv()
 
@@ -22,6 +24,11 @@ async def lifespan(app: FastAPI):
         base_url=PROVIDER_URL,
     ) as session:
         app.state.http_session = session
+
+        app.state.provider_client = EventsProviderHTTPClient(
+            session=session,
+            api_key=API_KEY
+        )
 
         start_scheduler(app)
 
