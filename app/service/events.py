@@ -5,7 +5,7 @@ from db.models import Event, Place, Ticket
 from provider_requesting.events_providers import (
     EventsPaginator,
     EventsProviderClient,
-    SeatsService,
+    EventsProviderHTTPClient,
 )
 from provider_requesting.exceptions import (
     EventNotFoundError,
@@ -17,6 +17,7 @@ from provider_requesting.schemas import (
     EventCreated,
     EventDetailResponse,
     EventRegister,
+    SeatsResponse,
     UnregisterResponse,
 )
 from repository.repository import (
@@ -120,6 +121,57 @@ class PlaceEventsService:
         }
 
         return EventDetailResponse(**event_data)
+
+
+class SeatsService:
+    CACHE_TTL = 30
+
+    def __init__(
+        self,
+        repository: PlaceEventsRepositoryApi,
+        provider_client: EventsProviderHTTPClient,
+        cache: dict,
+    ):
+        self.repository = repository
+        self.provider_client = provider_client
+        self.cache = cache
+
+    async def get_available_seats(
+        self,
+        event_id: UUID,
+    ) -> SeatsResponse | None:
+
+        event = await self.repository.get_event_by_id(event_id)
+
+        if event is None:
+            return None
+
+        if event.status != 'published':
+            raise ValueError('Event is not published')
+
+        cached_data = self.cache.get(event_id)
+
+        if cached_data is not None:
+            cached_at, seats = cached_data
+
+            if time.monotonic() - cached_at < self.CACHE_TTL:
+                return SeatsResponse(
+                    event_id=event_id,
+                    available_seats=seats,
+                )
+
+        provider_response = await self.provider_client.get_available_seats(
+            event_id,
+        )
+
+        seats = provider_response.seats
+
+        self.cache[event_id] = (time.monotonic(), seats)
+
+        return SeatsResponse(
+            event_id=event_id,
+            available_seats=seats,
+        )
 
 
 class TicketService:

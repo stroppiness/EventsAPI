@@ -5,10 +5,8 @@ from datetime import UTC, datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from core.config import settings
 from db.database import SessionLocal
 from db.models import SyncMetadata
-from provider_requesting.events_providers import EventsProviderHTTPClient
 from repository.repository import SyncEventsRepository
 from service.events import EventSyncClientService
 
@@ -30,13 +28,8 @@ async def run_sync(app):
             async with SessionLocal() as session:
                 repository = SyncEventsRepository(session)
 
-                provider_client = EventsProviderHTTPClient(
-                    session=app.state.http_session,
-                    api_key=settings.api_key,
-                )
-
                 sync_service = EventSyncClientService(
-                    provider_client=provider_client,
+                    provider_client=app.state.provider_client,
                     sync_repository=repository,
                 )
 
