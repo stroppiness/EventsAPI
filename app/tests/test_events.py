@@ -28,7 +28,10 @@ async def test_get_events_success():
         200, {"next": None, "previous": None, "results": []}
     )
 
-    client = EventsProviderHTTPClient(session=mock_session, api_key="test-api-key")
+    client = EventsProviderHTTPClient(
+        session=mock_session,
+        api_key="test-api-key"
+    )
     result = await client.get_events(changed_at=datetime.now(UTC))
 
     assert result.results == []
@@ -44,8 +47,12 @@ async def test_register_event_success():
         201, {"ticket_id": str(expected_ticket_id)}
     )
 
-    client = EventsProviderHTTPClient(session=mock_session, api_key="test-api-key")
+    client = EventsProviderHTTPClient(
+        session=mock_session,
+        api_key="test-api-key"
+    )
     register_data = EventRegister(
+        event_id=uuid4(),
         first_name="Алексей",
         last_name="Петров",
         seat="B5",
@@ -74,7 +81,10 @@ async def test_get_events_http_error():
     mock_context_manager.__aenter__.return_value = mock_response
     mock_session.get.return_value = mock_context_manager
 
-    client = EventsProviderHTTPClient(session=mock_session, api_key="test-api-key")
+    client = EventsProviderHTTPClient(
+        session=mock_session,
+        api_key="test-api-key"
+    )
 
     with pytest.raises(aiohttp.ClientResponseError):
         await client.get_events(changed_at=datetime.now(UTC))
