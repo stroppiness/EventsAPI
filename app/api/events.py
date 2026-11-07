@@ -167,6 +167,7 @@ async def register_ticket(
     db: SessionDep,
     request: Request,
 ):
+    ticket_repository = TicketRepository(db)
     repository = PlaceEventsRepositoryApi(db)
 
     provider_client = request.app.state.provider_client
@@ -178,6 +179,7 @@ async def register_ticket(
     )
 
     service = TicketService(
+        ticket_repository=ticket_repository,
         event_repository=repository,
         provider_client=provider_client,
         seats_service=seats_service,
