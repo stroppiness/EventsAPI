@@ -68,7 +68,8 @@ class EventsProviderHTTPClient:
 
         url = next_url or '/api/events/'
         params = {
-            'changed_at': changed_at.isoformat()} if next_url is None else None
+            'changed_at': changed_at.strftime('%Y-%m-%dT%H:%M:%SZ')
+            } if next_url is None else None
 
         try:
             async with self.session.get(
@@ -90,7 +91,10 @@ class EventsProviderHTTPClient:
             logger.exception('Ошибка соединения с Events Provider')
             raise
 
-    async def get_all_events(self, changed_at: datetime) -> list[EventResponse]:
+    async def get_all_events(
+        self,
+        changed_at: datetime
+    ) -> list[EventResponse]:
         events = []
         next_url = None
         while True:
@@ -122,7 +126,8 @@ class EventsProviderHTTPClient:
                 data = await response.json()
                 return ProviderSeatsResponse.model_validate(data)
         except aiohttp.ClientResponseError:
-            logger.exception('Ошибка HTTP при получении мест у Events Provider')
+            logger.exception(
+                'Ошибка HTTP при получении мест у Events Provider')
             raise
         except aiohttp.ClientError:
             logger.exception('Ошибка соединения с Events Provider')
