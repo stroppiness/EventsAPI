@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 
 import aiohttp
 from fastapi import FastAPI
-from pydantic_settings import settings
+from core.config import settings
 
 from core.scheduler import start_scheduler, stop_scheduler
 from provider_requesting.events_providers import EventsProviderHTTPClient
