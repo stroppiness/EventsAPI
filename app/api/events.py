@@ -131,9 +131,12 @@ async def get_available_seats(
 
     provider_client = request.app.state.provider_client
 
+    cache = request.app.state.seats_cache
+
     service = SeatsService(
         repository=repository,
         provider_client=provider_client,
+        cache=cache,
     )
 
     try:

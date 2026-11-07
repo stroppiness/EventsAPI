@@ -29,6 +29,8 @@ async def lifespan(app: FastAPI):
             api_key=API_KEY
         )
 
+        app.state.seats_cache = {}
+
         start_scheduler(app)
 
         yield
