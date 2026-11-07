@@ -6,7 +6,6 @@ from datetime import datetime
 from uuid import UUID
 
 import aiohttp
-from core.config import settings
 
 from provider_requesting.schemas import (
     EventCreated,
@@ -20,8 +19,6 @@ from provider_requesting.schemas import (
 from repository.repository import PlaceEventsRepositoryApi
 
 logger = logging.getLogger(__name__)
-
-API_KEY = settings.api_key
 
 
 class EventsProviderClient(typing.Protocol):
@@ -38,11 +35,6 @@ class EventsProviderClient(typing.Protocol):
         changed_at: datetime,
         next_url: str | None = None,
     ) -> EventsResponse: ...
-
-    async def get_all_events(
-        self,
-        changed_at: datetime,
-    ) -> list[EventResponse]: ...
 
     async def unregister(
         self,
@@ -126,27 +118,6 @@ class EventsProviderHTTPClient:
         except aiohttp.ClientError:
             logger.exception('Ошибка соединения с Events Provider')
             raise
-
-    async def get_all_events(
-        self,
-        changed_at: datetime
-    ) -> list[EventResponse]:
-        events = []
-        next_url = None
-        while True:
-            page = await self.get_events(
-                changed_at=changed_at,
-                next_url=next_url,
-            )
-
-            events.extend(page.results)
-
-            if page.next is None:
-                break
-
-            next_url = page.next
-
-        return events
 
     async def get_available_seats(
         self,

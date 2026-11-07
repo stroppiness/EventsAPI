@@ -1,5 +1,4 @@
 from datetime import UTC, date, datetime, time, timedelta, timezone
-from typing import Protocol
 from uuid import UUID
 
 from db.models import Event, Place, Ticket
@@ -29,21 +28,6 @@ from repository.repository import (
 from service.exceptions import TicketNotFoundError
 
 UTC_PLUS_3 = timezone(timedelta(hours=3))
-
-
-class EventSyncClient(Protocol):
-
-    async def sync_events(self) -> None: ...
-
-
-class PlaceEvents(Protocol):
-
-    async def get_events(
-        self,
-        date_from: date | None,
-        page: int,
-        page_size: int,
-    ) -> tuple[list[Event], int]: ...
 
 
 class EventSyncClientService:

@@ -24,7 +24,6 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("POSTGRES_DATABASE_NAME", "POSTGRES_DB"),
     )
 
-    database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/events"
     provider_url: str = "http://student-system-events-provider-web.student-system-events-provider.svc:8000"
     api_key: str = ''
 

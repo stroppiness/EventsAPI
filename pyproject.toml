@@ -1,16 +1,12 @@
 [project]
 name = "eventsapi"
 version = "0.1.0"
-description = "Add your description here"
 readme = "README.md"
 authors = [
     { name = "stroppiness", email = "suslo418@gmail.com" }
 ]
 requires-python = ">=3.12"
 dependencies = ["pydantic-settings>=2.0.0",]
-
-[project.scripts]
-eventsapi = "eventsapi:main"
 
 [build-system]
 requires = ["uv_build>=0.13.6,<0.14.0"]

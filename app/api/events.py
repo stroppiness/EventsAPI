@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from datetime import date
 from uuid import UUID
 
@@ -24,6 +25,8 @@ from repository.repository import PlaceEventsRepositoryApi, TicketRepository
 from service.events import PlaceEventsService, SeatsService, TicketService
 from service.exceptions import TicketNotFoundError
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 
 
@@ -31,7 +34,7 @@ async def _run_sync_safe(app) -> None:
     try:
         await run_sync(app)
     except Exception:
-        pass
+        logger.debug("Ошибка фоновой синхронизации (статус failed зафиксирован)")
 
 
 @router.get('/health', status_code=status.HTTP_200_OK)
