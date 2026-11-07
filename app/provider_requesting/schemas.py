@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class EventRegister(BaseModel):
@@ -11,9 +11,13 @@ class EventRegister(BaseModel):
     seat: str
     email: EmailStr
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class EventCreated(BaseModel):
     ticket_id: UUID
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PlaceResponse(BaseModel):
@@ -24,6 +28,8 @@ class PlaceResponse(BaseModel):
     seats_pattern: str
     changed_at: datetime
     created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EventResponse(BaseModel):
@@ -38,11 +44,15 @@ class EventResponse(BaseModel):
     created_at: datetime
     status_changed_at: datetime
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class EventsResponse(BaseModel):
     next: str | None
     previous: str | None
     results: list[EventResponse]
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PlaceApiResponse(BaseModel):
@@ -50,6 +60,8 @@ class PlaceApiResponse(BaseModel):
     name: str
     city: str
     address: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EventApiResponse(BaseModel):
@@ -61,12 +73,16 @@ class EventApiResponse(BaseModel):
     status: Literal['new', 'published', 'registration_closed', 'finished']
     number_of_visitors: int
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class EventsApiResponse(BaseModel):
     count: int
     next: str | None
     previous: str | None
     results: list[EventApiResponse]
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PlaceDetailResponse(BaseModel):
@@ -75,6 +91,8 @@ class PlaceDetailResponse(BaseModel):
     city: str
     address: str
     seats_pattern: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EventDetailResponse(BaseModel):
@@ -86,15 +104,23 @@ class EventDetailResponse(BaseModel):
     status: Literal['new', 'published', 'registration_closed', 'finished']
     number_of_visitors: int
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class ProviderSeatsResponse(BaseModel):
     seats: list[str]
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SeatsResponse(BaseModel):
     event_id: UUID
     available_seats: list[str]
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class UnregisterResponse(BaseModel):
     success: bool
+
+    model_config = ConfigDict(from_attributes=True)
