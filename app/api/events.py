@@ -1,7 +1,8 @@
+import asyncio
 from datetime import date
 from uuid import UUID
 
-from core.scheduler import run_sync
+from core.scheduler import run_sync, sync_lock
 from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from db.database import SessionDep
@@ -26,18 +27,29 @@ from service.exceptions import TicketNotFoundError
 router = APIRouter()
 
 
+async def _run_sync_safe(app) -> None:
+    try:
+        await run_sync(app)
+    except Exception:
+        pass
+
+
 @router.get('/health', status_code=status.HTTP_200_OK)
 async def healthcheck():
     """Проверка статуса работы приложения."""
     return {'status': 'ok'}
 
 
-@router.post('/sync/trigger', status_code=status.HTTP_200_OK)
+@router.post('/sync/trigger', status_code=status.HTTP_202_ACCEPTED)
 async def trigger_sync(request: Request):
-    """Ручной запуск синхронизации."""
-    await run_sync(request.app)
+    """Ручной запуск синхронизации в фоне."""
+    if sync_lock.locked():
+        return {'detail': 'Синхронизация уже выполняется'}
 
-    return {"detail": "Синхронизация успешно завершена"}
+    request.app.state.sync_task = asyncio.create_task(
+        _run_sync_safe(request.app)
+    )
+    return {'detail': 'Синхронизация запущена'}
 
 
 @router.get(
