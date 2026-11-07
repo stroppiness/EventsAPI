@@ -68,7 +68,7 @@ class EventsProviderHTTPClient:
 
         url = next_url or '/api/events/'
         params = {
-            'changed_at': changed_at.strftime('%Y-%m-%dT%H:%M:%SZ')
+            'changed_at': changed_at.strftime('%Y-%m-%d')
             } if next_url is None else None
 
         try:
