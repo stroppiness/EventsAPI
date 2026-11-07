@@ -5,8 +5,7 @@ import aiohttp
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
-from core.scheduler import start_scheduler, stop_scheduler
-from db.database import API_KEY
+from core.scheduler import API_KEY, start_scheduler, stop_scheduler
 from provider_requesting.events_providers import EventsProviderHTTPClient
 
 load_dotenv()
