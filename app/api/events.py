@@ -163,7 +163,6 @@ async def get_available_seats(
     response_model=EventCreated,
 )
 async def register_ticket(
-    event_id: UUID,
     data: EventRegister,
     db: SessionDep,
     request: Request,
