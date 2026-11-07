@@ -58,7 +58,7 @@ class Event(Base):
         DateTime(timezone=True),
     )
 
-    place: Mapped["Place"] = relationship("Place", lazy="selectin")
+    place: Mapped['Place'] = relationship('Place', lazy='selectin')
 
 
 class SyncMetadata(Base):
@@ -76,13 +76,13 @@ class SyncMetadata(Base):
 
 
 class Ticket(Base):
-    __tablename__ = "tickets"
+    __tablename__ = 'tickets'
 
     __table_args__ = (
         UniqueConstraint(
-            "event_id",
-            "seat",
-            name="uq_ticket_event_seat",
+            'event_id',
+            'seat',
+            name='uq_ticket_event_seat',
         ),
     )
 
@@ -97,7 +97,7 @@ class Ticket(Base):
     )
 
     event_id: Mapped[UUID] = mapped_column(
-        ForeignKey("events.id"),
+        ForeignKey('events.id'),
         nullable=False,
     )
 

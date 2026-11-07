@@ -25,7 +25,7 @@ API_KEY = os.getenv('API_KEY')
 
 async def run_sync(app):
     if sync_lock.locked():
-        logger.warning("Синхронизация уже выполняется, пропускаем запуск")
+        logger.warning('Синхронизация уже выполняется, пропускаем запуск')
         return
 
     async with sync_lock:
@@ -49,14 +49,14 @@ async def run_sync(app):
                     await sync_service.sync_events()
 
                     metadata = SyncMetadata(
-                        sync_status="success",
+                        sync_status='success',
                         last_sync_time=datetime.now(UTC),
                         last_changed_at=sync_started_at,
                     )
                     await repository.save_metadata(metadata)
 
         except Exception:
-            logger.exception("Ошибка фоновой синхронизации")
+            logger.exception('Ошибка фоновой синхронизации')
 
             try:
                 async with SessionLocal() as session:
@@ -64,14 +64,14 @@ async def run_sync(app):
 
                     async with session.begin():
                         metadata = SyncMetadata(
-                            sync_status="failed",
+                            sync_status='failed',
                             last_sync_time=sync_started_at,
                             last_changed_at=None,
                         )
                         await repository.save_metadata(metadata)
 
             except Exception:
-                logger.exception("Не удалось сохранить статус failed")
+                logger.exception('Не удалось сохранить статус failed')
 
             raise
 
@@ -83,7 +83,7 @@ def start_scheduler(app):
         coalesce=True,
         trigger=CronTrigger(hour=3, minute=0),
         args=[app],
-        id="events_sync",
+        id='events_sync',
         replace_existing=True,
     )
 

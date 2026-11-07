@@ -27,7 +27,7 @@ API_KEY = os.getenv('API_KEY')
 
 
 class EventsProviderClient(typing.Protocol):
-    """Класс для описания контрактов."""
+    '''Класс для описания контрактов.'''
 
     async def register(
         self,
@@ -54,7 +54,7 @@ class EventsProviderClient(typing.Protocol):
 
 
 class EventsProviderHTTPClient:
-    """Класс для операций, требующих взимодействия с API-провайдером."""
+    '''Класс для операций, требующих взимодействия с API-провайдером.'''
 
     def __init__(self, session: aiohttp.ClientSession, api_key: str):
         self.session = session
@@ -113,20 +113,20 @@ class EventsProviderHTTPClient:
         self,
         event_id: UUID,
     ) -> ProviderSeatsResponse:
-        url = f"/api/events/{event_id}/seats/"
+        url = f'/api/events/{event_id}/seats/'
         try:
             async with self.session.get(
                 url,
-                headers={"x-api-key": self.api_key},
+                headers={'x-api-key': self.api_key},
             ) as response:
                 response.raise_for_status()
                 data = await response.json()
                 return ProviderSeatsResponse.model_validate(data)
         except aiohttp.ClientResponseError:
-            logger.exception("Ошибка HTTP при получении мест у Events Provider")
+            logger.exception('Ошибка HTTP при получении мест у Events Provider')
             raise
         except aiohttp.ClientError:
-            logger.exception("Ошибка соединения с Events Provider")
+            logger.exception('Ошибка соединения с Events Provider')
             raise
 
     async def register(
@@ -135,13 +135,13 @@ class EventsProviderHTTPClient:
         data: EventRegister,
     ) -> EventCreated:
 
-        url = f"/api/events/{event_id}/register/"
+        url = f'/api/events/{event_id}/register/'
 
         try:
             async with self.session.post(
                 url,
-                headers={"x-api-key": self.api_key},
-                json=data.model_dump(mode="json"),
+                headers={'x-api-key': self.api_key},
+                json=data.model_dump(mode='json'),
             ) as response:
                 response.raise_for_status()
                 response_data = await response.json()
@@ -149,11 +149,11 @@ class EventsProviderHTTPClient:
                 return EventCreated.model_validate(response_data)
 
         except aiohttp.ClientResponseError:
-            logger.exception("Ошибка HTTP при регистрации на мероприятие")
+            logger.exception('Ошибка HTTP при регистрации на мероприятие')
             raise
 
         except aiohttp.ClientError:
-            logger.exception("Ошибка соединения с Events Provider")
+            logger.exception('Ошибка соединения с Events Provider')
             raise
 
     async def unregister(
@@ -161,13 +161,13 @@ class EventsProviderHTTPClient:
         event_id: UUID,
         ticket_id: UUID,
     ) -> UnregisterResponse:
-        url = f"/api/events/{event_id}/unregister/"
+        url = f'/api/events/{event_id}/unregister/'
 
         try:
             async with self.session.delete(
                 url,
-                headers={"x-api-key": self.api_key},
-                json={"ticket_id": str(ticket_id)},
+                headers={'x-api-key': self.api_key},
+                json={'ticket_id': str(ticket_id)},
             ) as response:
                 response.raise_for_status()
                 response_data = await response.json()
@@ -175,11 +175,11 @@ class EventsProviderHTTPClient:
                 return UnregisterResponse.model_validate(response_data)
 
         except aiohttp.ClientResponseError:
-            logger.exception("Ошибка HTTP при отмене регистрации у Provider")
+            logger.exception('Ошибка HTTP при отмене регистрации у Provider')
             raise
 
         except aiohttp.ClientError:
-            logger.exception("Ошибка соединения с Events Provider")
+            logger.exception('Ошибка соединения с Events Provider')
             raise
 
 
@@ -206,8 +206,8 @@ class SeatsService:
         if event is None:
             return None
 
-        if event.status != "published":
-            raise ValueError("Event is not published")
+        if event.status != 'published':
+            raise ValueError('Event is not published')
 
         cached_data = self.cache.get(event_id)
 
