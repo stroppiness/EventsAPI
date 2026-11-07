@@ -4,8 +4,7 @@ from typing import Annotated
 from dotenv import load_dotenv
 from fastapi import Depends
 from sqlalchemy.engine import URL
-from sqlalchemy.ext.asyncio import (AsyncSession, async_sessionmaker,
-                                    create_async_engine)
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
 
 load_dotenv()
