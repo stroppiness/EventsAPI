@@ -32,7 +32,7 @@ class EventResponse(BaseModel):
     place: PlaceResponse
     event_time: datetime
     registration_deadline: datetime
-    status: Literal["new", "published"]
+    status: Literal['new', 'published', 'registration_closed', 'finished']
     number_of_visitors: int
     changed_at: datetime
     created_at: datetime
@@ -58,8 +58,9 @@ class EventApiResponse(BaseModel):
     place: PlaceApiResponse
     event_time: datetime
     registration_deadline: datetime
-    status: Literal["new", "published"]
+    status: Literal['new', 'published', 'registration_closed', 'finished']
     number_of_visitors: int
+
 
 class EventsApiResponse(BaseModel):
     count: int
@@ -82,7 +83,7 @@ class EventDetailResponse(BaseModel):
     place: PlaceDetailResponse
     event_time: datetime
     registration_deadline: datetime
-    status: str
+    status: Literal['new', 'published', 'registration_closed', 'finished']
     number_of_visitors: int
 
 
