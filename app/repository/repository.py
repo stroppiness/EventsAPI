@@ -154,7 +154,7 @@ class TicketRepository:
     async def create_ticket(self, ticket: Ticket) -> None:
         try:
             self.session.add(ticket)
-            await self.session.flush()
+            await self.session.commit()
 
         except SQLAlchemyError:
             logger.exception("Ошибка при сохранении билета")
@@ -175,7 +175,7 @@ class TicketRepository:
     async def delete_ticket(self, ticket: Ticket) -> None:
         try:
             await self.session.delete(ticket)
-            await self.session.flush()
+            await self.session.commit()
 
         except SQLAlchemyError:
             logger.exception(
