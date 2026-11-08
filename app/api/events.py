@@ -8,7 +8,6 @@ from fastapi import APIRouter, HTTPException, Query, Request, status
 from core.scheduler import run_sync, sync_lock
 from db.database import SessionDep
 from provider_requesting.exceptions import (
-    EventNotFoundError,
     EventNotPublishedError,
     RegistrationDeadlinePassedError,
     SeatNotAvailableError,
@@ -23,7 +22,7 @@ from provider_requesting.schemas import (
 )
 from repository.repository import PlaceEventsRepositoryApi, TicketRepository
 from service.events import PlaceEventsService, SeatsService, TicketService
-from service.exceptions import TicketNotFoundError
+from service.exceptions import EventNotFoundError, TicketNotFoundError
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +42,7 @@ async def healthcheck():
     return {'status': 'ok'}
 
 
-@router.post('/sync/trigger', status_code=status.HTTP_202_ACCEPTED)
+@router.post('/sync/trigger', status_code=status.HTTP_200_OK)
 async def trigger_sync(request: Request):
     """Ручной запуск синхронизации в фоне."""
     if sync_lock.locked():
@@ -145,7 +144,7 @@ async def get_available_seats(
     try:
         result = await service.get_available_seats(event_id)
 
-    except ValueError as err:
+    except EventNotPublishedError as err:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Event is not published",

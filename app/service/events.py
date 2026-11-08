@@ -9,7 +9,6 @@ from provider_requesting.events_providers import (
     EventsProviderHTTPClient,
 )
 from provider_requesting.exceptions import (
-    EventNotFoundError,
     EventNotPublishedError,
     RegistrationDeadlinePassedError,
     SeatNotAvailableError,
@@ -27,7 +26,7 @@ from repository.repository import (
     SyncRepository,
     TicketRepository,
 )
-from service.exceptions import TicketNotFoundError
+from service.exceptions import EventNotFoundError, TicketNotFoundError
 
 UTC_PLUS_3 = timezone(timedelta(hours=3))
 

@@ -1,7 +1,3 @@
-class EventNotFoundError(Exception):
-    pass
-
-
 class EventNotPublishedError(Exception):
     pass
 
