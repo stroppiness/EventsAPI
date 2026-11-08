@@ -1,5 +1,5 @@
 import time as time_module
-from datetime import UTC, date, time, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, time, timedelta, timezone
 from uuid import UUID
 
 from db.models import Event, Place, Ticket
