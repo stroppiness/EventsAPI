@@ -1,5 +1,5 @@
-import time
-from datetime import UTC, date, datetime, timedelta, timezone
+import time as time_module
+from datetime import UTC, date, time, datetime, timedelta, timezone
 from uuid import UUID
 
 from db.models import Event, Place, Ticket
@@ -155,7 +155,7 @@ class SeatsService:
         if cached_data is not None:
             cached_at, seats = cached_data
 
-            if time.monotonic() - cached_at < self.CACHE_TTL:
+            if time_module.monotonic() - cached_at < self.CACHE_TTL:
                 return SeatsResponse(
                     event_id=event_id,
                     available_seats=seats,
@@ -167,7 +167,7 @@ class SeatsService:
 
         seats = provider_response.seats
 
-        self.cache[event_id] = (time.monotonic(), seats)
+        self.cache[event_id] = (time_module.monotonic(), seats)
 
         return SeatsResponse(
             event_id=event_id,
