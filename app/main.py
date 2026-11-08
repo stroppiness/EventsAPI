@@ -1,10 +1,12 @@
-from api.events import router as event_router
-from core.lifespan import lifespan
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
+from api.events import router as event_router
+from core.lifespan import lifespan
+
 app = FastAPI(lifespan=lifespan)
+
 
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(

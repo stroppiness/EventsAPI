@@ -1,10 +1,11 @@
 from typing import Annotated
 
-from core.config import settings
 from fastapi import Depends
 from sqlalchemy.engine import URL
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import declarative_base
+
+from core.config import settings
 
 DATABASE_URL = URL.create(
     'postgresql+asyncpg',

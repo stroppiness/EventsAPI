@@ -19,6 +19,7 @@ pythonpath = ["."]
 
 [tool.ruff]
 line-length = 88
+src = ["app"]
 target-version = "py312"
 
 [tool.ruff.lint]
@@ -33,4 +34,4 @@ exclude = [
 ]
 
 [tool.ruff.lint.isort]
-known-first-party = ["app", "db", "repository", "service", "provider_requesting"]
+known-first-party = ["api", "app", "core", "db", "repository", "service", "provider_requesting"]

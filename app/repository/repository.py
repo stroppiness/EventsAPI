@@ -81,7 +81,8 @@ class SyncEventsRepository:
             await self.session.flush()
 
         except SQLAlchemyError:
-            logger.exception(f"Ошибка при сохранении площадки (ID: {place.id})")
+            logger.exception(
+                "Ошибка при сохранении площадки (ID: %s)", place.id)
             raise
 
     async def event_upsert(self, event: Event) -> None:
@@ -90,7 +91,8 @@ class SyncEventsRepository:
             await self.session.flush()
 
         except SQLAlchemyError:
-            logger.exception(f"Ошибка при сохранении события (ID: {event.id})")
+            logger.exception(
+                "Ошибка при сохранении события (ID: %s)", event.id)
             raise
 
 

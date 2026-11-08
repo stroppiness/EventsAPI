@@ -1,4 +1,5 @@
-from datetime import UTC, date, datetime, time, timedelta, timezone
+import time
+from datetime import UTC, date, datetime, timedelta, timezone
 from uuid import UUID
 
 from db.models import Event, Place, Ticket
@@ -147,7 +148,7 @@ class SeatsService:
             return None
 
         if event.status != 'published':
-            raise ValueError('Event is not published')
+            raise EventNotPublishedError('Event is not published')
 
         cached_data = self.cache.get(event_id)
 

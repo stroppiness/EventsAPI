@@ -3,9 +3,9 @@ import logging
 from datetime import date
 from uuid import UUID
 
-from core.scheduler import run_sync, sync_lock
 from fastapi import APIRouter, HTTPException, Query, Request, status
 
+from core.scheduler import run_sync, sync_lock
 from db.database import SessionDep
 from provider_requesting.exceptions import (
     EventNotFoundError,
